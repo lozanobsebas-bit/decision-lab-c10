@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI development record · Decision Lab</title>
+<style>
+  :root{--bg:#f4f6f3;--panel:#fff;--ink:#18231f;--muted:#5b6b64;--line:#d9e0db;--brand:#0f6b5c;--brand-d:#0a4d42;--brand-l:#e3f2ee}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+  header{background:var(--brand-d);color:#fff;padding:22px 0}
+  .wrap{width:min(820px,calc(100% - 28px));margin:0 auto}
+  h1{margin:0;font-size:clamp(23px,3.4vw,32px);letter-spacing:-.02em}
+  header p{margin:4px 0 0;color:#cfe6e0}
+  main section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin:16px 0}
+  h2{margin:0 0 8px;font-size:19px}
+  ul,ol{padding-left:22px;margin:8px 0}
+  li{margin:4px 0}
+  a{color:var(--brand-d)}
+  a:focus-visible{outline:3px solid #f2a93b;outline-offset:2px}
+  .note{border-left:4px solid var(--brand);background:var(--brand-l);padding:10px 14px;border-radius:0 8px 8px 0}
+  blockquote{margin:10px 0;padding:10px 14px;border-left:3px solid var(--line);color:var(--muted);background:#fafcfb}
+  table{border-collapse:collapse;width:100%;font-size:15px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+  thead th{background:#eef3f0}
+  .back{display:inline-block;margin:16px 0 40px}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>AI development record</h1>
+  <p>How the Decision Lab webpage (Grade 10 · Global Economics · Criterion 10) was developed with an AI assistant.</p>
+</div></header>
+
+<main class="wrap">
+  <section>
+    <h2>Summary</h2>
+    <p>This webpage was developed with <b>Claude</b>, an AI assistant made by Anthropic, used through the Claude desktop app. The student asked the assistant to read the Criterion 10 instructions from the course on the school's virtual classroom (Open), build the webpage, test it, and publish it on GitHub Pages. The assistant wrote all the code, checked the calculations, and created the repository and the public site.</p>
+    <p class="note">This page is a <b>written record</b>, not a word-for-word transcript. Parts of the original conversation that have nothing to do with this assignment (personal files and unrelated school matters) were left out. Nothing here changes what was asked or what the AI did.</p>
+  </section>
+
+  <section>
+    <h2>What was asked</h2>
+    <p>Paraphrased from the student's request:</p>
+    <blockquote>Read the instructions for the Criterion 10 task in the Global Economics course on Open. The task is to create a working webpage with a GitHub repository that does everything we did this term. Follow the instructions and the reference example, make it the way the teacher would like it, and take care of GitHub too.</blockquote>
+    <p>The AI was then given access to the course page, where it found the task <i>“C10 – Webpage”</i> and the teacher's instruction document (<i>Interactive Decision Webpage: C10 Practice</i>).</p>
+  </section>
+
+  <section>
+    <h2>What the AI did, step by step</h2>
+    <ol>
+      <li><b>Read the requirements.</b> It opened the teacher's instruction document and the reference dashboard to understand the five requirements: interactive model, two or more preloaded examples, usability and validation, this AI record, and submitting only the public URL.</li>
+      <li><b>Designed and wrote the page.</b> It wrote its own code and its own visual design in a single file (<code>index.html</code>), with the same functionality the instructions ask for: editable alternatives, states, payoffs and probabilities; Maximax, Maximin, Minimax Regret and EMV with tie detection; staged filtering with editable stages; and a flow diagram.</li>
+      <li><b>Tested it.</b> It ran the page locally and checked the three preloaded examples against calculations done by hand, including the ties. It also tested invalid inputs (blank cells, probabilities that do not add to 1, an invalid <i>k</i>), adding and removing alternatives, states and stages, and the phone-size layout. It found and fixed two small layout problems.</li>
+      <li><b>Published it.</b> It created the public GitHub repository <code>decision-lab-c10</code>, uploaded the page, turned on GitHub Pages, and checked that the live site works.</li>
+      <li><b>Added this record.</b> At the student's request, it wrote this page and linked it from the webpage (requirement 4).</li>
+    </ol>
+  </section>
+
+  <section>
+    <h2>The student's role</h2>
+    <ul>
+      <li>Decided what to build and gave the AI the task and the instructions to follow.</li>
+      <li>Signed in to the school's classroom and to GitHub, so the AI could read the task and publish.</li>
+      <li>Reviews the result and is responsible for understanding how the page works.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Preloaded examples and how they were checked</h2>
+    <table>
+      <thead><tr><th>Example</th><th>What it shows</th><th>Result checked by hand</th></tr></thead>
+      <tbody>
+        <tr><td>Pop-up café location</td><td>The four criteria choose different alternatives; three staged filters.</td><td>Maximax: Stadium · Maximin: University · Minimax Regret: Downtown · EMV: Stadium. Staged result: Downtown.</td></tr>
+        <tr><td>Investment portfolio (ties)</td><td>Two alternatives with identical payoffs, so Maximin ends in a tie.</td><td>Maximin: tie between Bonds and Savings. Minimax Regret: Tech fund · EMV: Solar plant. Staged result: Solar plant.</td></tr>
+        <tr><td>Tie lab (cutoff ties)</td><td>Ties at a filtering cutoff: all tied alternatives survive.</td><td>EMV tie among X, Y and Z, then Maximin selects Z.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <a class="back" href="./">← Back to the Decision Lab</a>
+</main>
+</body>
+</html>

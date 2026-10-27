@@ -172,7 +172,7 @@
 'use strict';
 
 // Link to the AI conversation used to develop this webpage.
-const AI_CONVERSATION_URL = '';
+const AI_CONVERSATION_URL = 'ai-record.html';
 
 const EPS = 1e-9;
 const CRITERIA = {
@@ -482,8 +482,8 @@ $('presets').innerHTML = Object.entries(PRESETS).map(([k,p]) => `<button type="b
 $('presets').addEventListener('click', e => { const k = e.target.dataset.key; if (k) loadPreset(k); });
 
 if (AI_CONVERSATION_URL) {
-  $('aiBox').innerHTML = `<p style="margin:0 0 8px">This webpage was developed with the help of an AI assistant (Claude). The full conversation is here:</p><p style="margin:0"><a href="${esc(AI_CONVERSATION_URL)}" target="_blank" rel="noopener">${esc(AI_CONVERSATION_URL)}</a></p>`;
-  const top = $('aiLinkTop'); top.href = AI_CONVERSATION_URL; top.target = '_blank'; top.rel = 'noopener'; top.textContent = 'AI development conversation ↗';
+  $('aiBox').innerHTML = `<p style="margin:0 0 8px">This webpage was developed with an AI assistant (Claude, by Anthropic). The development record shows what was asked, what the AI did and how the result was checked:</p><p style="margin:0"><a href="${esc(AI_CONVERSATION_URL)}"><b>Open the AI development record</b></a></p>`;
+  const top = $('aiLinkTop'); top.href = AI_CONVERSATION_URL; top.textContent = 'AI development record ↗';
 } else {
   $('aiBox').innerHTML = '<p style="margin:0">The link to the AI conversation has not been added yet.</p>';
 }
