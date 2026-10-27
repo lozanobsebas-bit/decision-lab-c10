@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Decision Lab · Decisions under uncertainty</title>
+<meta name="description" content="Interactive tool to analyze decisions under uncertainty: Maximax, Maximin, Minimax Regret, EMV and staged filtering.">
+<style>
+  :root{
+    --bg:#f4f6f3; --panel:#ffffff; --ink:#18231f; --muted:#5b6b64; --line:#d9e0db;
+    --brand:#0f6b5c; --brand-d:#0a4d42; --brand-l:#e3f2ee;
+    --amber:#b45f06; --amber-l:#fdf1df; --red:#b3261e; --red-l:#fdeceb; --ok:#1d7a46;
+  }
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+  a{color:var(--brand-d)}
+  .wrap{width:min(1240px,calc(100% - 28px));margin:0 auto}
+  header.top{background:var(--brand-d);color:#fff;padding:22px 0 20px}
+  header.top .wrap{display:flex;flex-wrap:wrap;gap:14px 28px;align-items:flex-end;justify-content:space-between}
+  header.top h1{margin:0;font-size:clamp(24px,3.4vw,34px);letter-spacing:-.02em}
+  header.top p{margin:4px 0 0;color:#cfe6e0;max-width:62ch}
+  .ai-link{display:inline-flex;align-items:center;gap:8px;background:#fff;color:var(--brand-d);font-weight:650;text-decoration:none;padding:9px 14px;border-radius:999px;border:2px solid #fff}
+  .ai-link:hover{background:var(--brand-l)}
+  .ai-link:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,.scroll:focus-visible{outline:3px solid #f2a93b;outline-offset:2px}
+  ul.steps{display:flex;flex-wrap:wrap;gap:6px;margin:16px 0 4px;padding:0;list-style:none;font-size:13px;color:var(--muted)}
+  ul.steps li{background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:3px 12px}
+  ul.steps li b{color:var(--brand)}
+  section.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;margin:16px 0}
+  h2{margin:0 0 4px;font-size:19px}
+  h3{margin:0 0 6px;font-size:15px}
+  .lead{margin:0 0 14px;color:var(--muted)}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .presets{margin:14px 0 0}
+  button,input,select{font:inherit;color:inherit}
+  button{cursor:pointer;background:#fff;border:1px solid #aebbb4;border-radius:8px;padding:7px 12px}
+  button:hover{background:var(--brand-l);border-color:var(--brand)}
+  button:disabled{opacity:.4;cursor:default;background:#fff}
+  button.primary{background:var(--brand);border-color:var(--brand);color:#fff}
+  button.primary:hover{background:var(--brand-d)}
+  button.chip[aria-pressed="true"]{background:var(--brand);color:#fff;border-color:var(--brand)}
+  button.small{padding:3px 8px;font-size:12.5px}
+  button.danger{color:var(--red);border-color:#e3b6b3}
+  input,select{background:#fff;border:1px solid #aebbb4;border-radius:7px;padding:6px 8px}
+  input[type=number]{width:104px}
+  input.name{width:132px;font-weight:600}
+  input#unit{width:170px}
+  [aria-invalid="true"]{border:2px solid var(--red);background:var(--red-l)}
+  .scroll{overflow-x:auto;margin:12px 0}
+  table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+  caption{text-align:left;color:var(--muted);padding-bottom:6px;font-size:13px}
+  th,td{border:1px solid var(--line);padding:8px 10px;text-align:right;vertical-align:top}
+  th:first-child,td:first-child{text-align:left}
+  thead th{background:#eef3f0}
+  #payoffs th,#payoffs td,.lefthead th{text-align:left}
+  .cell-err{display:block;color:var(--red);font-size:12px;max-width:140px;line-height:1.25;margin-top:2px}
+  .banner{border-left:4px solid var(--brand);background:var(--brand-l);padding:10px 14px;border-radius:0 8px 8px 0;margin:10px 0}
+  .banner.warn{border-color:var(--amber);background:var(--amber-l)}
+  .banner.bad{border-color:var(--red);background:var(--red-l)}
+  .grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+  .crit{border:1px solid var(--line);border-radius:12px;padding:14px;min-width:0}
+  .crit .win{color:var(--brand-d);font-weight:700;margin:2px 0 6px}
+  .crit .win.tie{color:var(--amber)}
+  .crit p{margin:0 0 8px;font-size:13.5px;color:var(--muted)}
+  .crit ol{margin:6px 0 0;padding-left:22px;font-size:13.5px}
+  .tag{display:inline-block;font-size:11.5px;font-weight:700;padding:1px 7px;border-radius:999px;background:var(--amber-l);color:var(--amber);margin-left:4px}
+  .best td,.best th{background:var(--brand-l)}
+  details{margin-top:10px}
+  summary{cursor:pointer;font-weight:650;color:var(--brand-d)}
+  ol.rules{padding-left:0;list-style:none;counter-reset:r;margin:10px 0}
+  ol.rules li{counter-increment:r;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0;background:#fafcfb}
+  ol.rules li::before{content:"Stage " counter(r);font-weight:700;color:var(--brand);margin-right:10px}
+  ol.rules li label{margin-right:10px;white-space:nowrap}
+  ol.rules input[type=number]{width:70px}
+  .final-row td,.final-row th{background:var(--brand-l);font-weight:600}
+  .outcome{border:2px solid var(--ok);background:#eefaf2;border-radius:10px;padding:12px 14px;margin:12px 0;font-weight:600}
+  .outcome.tied{border-color:var(--amber);background:var(--amber-l)}
+  /* flow diagram */
+  .flow{display:flex;align-items:stretch;gap:0;padding:6px 2px 14px;margin:0;list-style:none;min-width:max-content}
+  .flow li{position:relative;width:230px;padding-right:44px}
+  .flow li:last-child{padding-right:0}
+  .flow li:not(:last-child)::after{content:"";position:absolute;right:8px;top:46px;width:28px;height:2px;background:var(--brand)}
+  .flow li:not(:last-child)::before{content:"";position:absolute;right:6px;top:41px;border-left:9px solid var(--brand);border-top:6px solid transparent;border-bottom:6px solid transparent}
+  .stage-title{font-size:12.5px;color:var(--muted);min-height:38px}
+  .node{border:2px solid var(--brand);background:var(--brand-l);border-radius:10px;padding:10px 12px;min-height:58px}
+  .node.final{border-color:var(--ok);background:#eefaf2}
+  .node.final.tied{border-color:var(--amber);background:var(--amber-l)}
+  .node small{display:block;color:var(--muted);font-weight:400}
+  .gone{margin:10px 0 0 14px;border-left:2px dashed var(--red);padding:4px 0 4px 12px;color:var(--red);font-size:13px}
+  .ai-box{border:2px dashed var(--brand);border-radius:12px;padding:14px 16px;background:var(--brand-l)}
+  footer{padding:8px 0 40px;color:var(--muted);font-size:13px}
+  @media(max-width:1000px){.grid4{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media(max-width:600px){.grid4{grid-template-columns:1fr} section.card{padding:14px} input.name{width:108px} input[type=number]{width:88px}
+    .flow{flex-direction:column;min-width:0}
+    .flow li{width:100%;padding:0 0 38px}
+    .flow li:last-child{padding-bottom:0}
+    .flow li:not(:last-child)::after{right:auto;left:50%;top:auto;bottom:10px;width:2px;height:22px}
+    .flow li:not(:last-child)::before{right:auto;left:calc(50% - 5px);top:auto;bottom:4px;border-left:6px solid transparent;border-right:6px solid transparent;border-top:9px solid var(--brand);border-bottom:0}
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div>
+      <h1>Decision Lab</h1>
+      <p>Decision-making under uncertainty. Enter alternatives, states of nature, payoffs and probabilities, and see Maximax, Maximin, Minimax Regret, EMV and staged filtering update live.</p>
+    </div>
+    <a class="ai-link" id="aiLinkTop" href="#ai-record">AI development record ↓</a>
+  </div>
+</header>
+
+<main class="wrap">
+  <nav aria-label="Page sections"><ul class="steps">
+    <li><b>1</b> Payoff table</li><li><b>2</b> Summary</li><li><b>3</b> Criterion decisions</li><li><b>4</b> Staged filtering + flow diagram</li><li><b>5</b> AI development record</li>
+  </ul></nav>
+
+  <section class="card" aria-labelledby="t-payoff">
+    <h2 id="t-payoff">1. Payoff table</h2>
+    <p class="lead">Load an example or build your own. Rows are states of nature, columns are alternatives. Everything below recalculates as you type.</p>
+    <div class="row presets" role="group" aria-label="Preloaded decision problems" id="presets"></div>
+    <div class="row" style="margin-top:14px">
+      <label>Payoff unit <input id="unit" value="USD thousands" aria-label="Payoff unit"></label>
+      <button id="addAlt" type="button">+ Add alternative</button>
+      <button id="addState" type="button">+ Add state of nature</button>
+      <button id="equalP" type="button" title="Give every state the same probability">Equal probabilities</button>
+      <button id="normP" type="button" title="Scale the entered probabilities so they add to 1">Normalize probabilities</button>
+    </div>
+    <div class="scroll" tabindex="0" role="region" aria-label="Editable payoff table (scrolls horizontally)"><table id="payoffs"></table></div>
+    <div id="validation" aria-live="polite"></div>
+  </section>
+
+  <section class="card" aria-labelledby="t-summary">
+    <h2 id="t-summary">2. Summary</h2>
+    <p class="lead">Values in <b class="unitName"></b>. Shown with two decimals; calculations keep full precision. Values that differ by less than 10⁻⁹ count as tied.</p>
+    <div id="summary"></div>
+    <details><summary>How is each statistic calculated?</summary>
+      <p><b>EMV</b> = Σ (probability of state × payoff in that state). <b>Max / Min payoff</b> = best / worst payoff of the alternative.</p>
+      <p><b>Regret</b> in a state = best payoff among <i>all</i> alternatives in that state − this alternative's payoff. <b>Max regret</b> = its largest regret. These benchmarks use the full original table and do not change during filtering.</p>
+    </details>
+    <details><summary>Show the regret table</summary><div id="regret"></div></details>
+  </section>
+
+  <section class="card" aria-labelledby="t-dec">
+    <h2 id="t-dec">3. Criterion decisions</h2>
+    <p class="lead">Each criterion looks at the full set of alternatives. They can disagree, because each one reflects a different attitude toward risk.</p>
+    <div class="grid4" id="decisions"></div>
+  </section>
+
+  <section class="card" aria-labelledby="t-filter">
+    <h2 id="t-filter">4. Staged filtering</h2>
+    <p class="lead">Apply criteria one after another. Each stage only looks at the survivors of the previous one, and eliminated alternatives never come back. Ties at the cutoff all survive.</p>
+    <ol class="rules" id="rules"></ol>
+    <button id="addRule" type="button">+ Add stage</button>
+    <div id="filterMsg" aria-live="polite"></div>
+    <div id="filterOut"></div>
+    <h3 style="margin-top:18px">Flow diagram</h3>
+    <div class="scroll" tabindex="0" role="region" aria-label="Staged filtering flow diagram (scrolls horizontally)"><ol class="flow" id="flow"></ol></div>
+    <p class="lead" style="margin:0">Solid arrows connect survivors; the dashed red branch lists who was eliminated at that stage. The table above is the text version of this diagram.</p>
+  </section>
+
+  <section class="card" id="ai-record" aria-labelledby="t-ai">
+    <h2 id="t-ai">5. AI development record</h2>
+    <div class="ai-box" id="aiBox"></div>
+  </section>
+</main>
+
+<footer class="wrap">Built for Global Economics · Grade 10 · Term 1 · Criterion 10. Individual work.</footer>
+
+<script>
+(() => {
+'use strict';
+
+// Link to the AI conversation used to develop this webpage.
+const AI_CONVERSATION_URL = '';
+
+const EPS = 1e-9;
+const CRITERIA = {
+  emv:    {name:'EMV (Bayes)',     col:'EMV',        dir: 1, text:'Highest probability-weighted average payoff.'},
+  max:    {name:'Maximax',         col:'Max payoff', dir: 1, text:'Highest possible payoff: the optimist.'},
+  min:    {name:'Maximin',         col:'Min payoff', dir: 1, text:'Highest worst-case payoff: protect the downside.'},
+  regret: {name:'Minimax Regret',  col:'Max regret', dir:-1, text:'Lowest worst-case regret: limit the biggest missed chance.'}
+};
+
+const PRESETS = {
+  cafe: {
+    label:'Pop-up café location', unit:'USD',
+    alts:['Downtown','University','Stadium','Business park'],
+    states:['Sunny weekend','Rainy weekend','Big event'],
+    p:[0.5,0.3,0.2],
+    m:[[90,70,120,50],[40,60,-30,45],[110,80,160,50]],
+    rules:[['emv','keep',3],['min','keep',2],['regret','best',1]]
+  },
+  invest: {
+    label:'Investment portfolio (ties)', unit:'USD thousands',
+    alts:['Expansion','Solar plant','Bonds','Savings','Tech fund'],
+    states:['Boom','Stable','Slump'],
+    p:[0.2,0.5,0.3],
+    m:[[200,100,30,30,150],[40,60,30,30,50],[-100,-20,30,30,-60]],
+    rules:[['regret','keep',3],['min','keep',2],['emv','best',1]]
+  },
+  tie: {
+    label:'Tie lab (cutoff ties)', unit:'points',
+    alts:['X','Y','Z','W'],
+    states:['Good','Bad'],
+    p:[0.5,0.5],
+    m:[[100,0,50,80],[0,100,50,10]],
+    rules:[['emv','best',1],['min','best',1]]
+  }
+};
+
+let uid = 0;
+const nid = () => 'i' + (++uid);
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const num = raw => (raw === '' || raw === null || raw === undefined) ? NaN : Number(raw);
+const fmt = n => !Number.isFinite(n) ? 'n/a' : (Object.is(Number(n.toFixed(2)), -0) ? '0.00' : n.toFixed(2));
+
+let model;
+let activePreset = 'cafe';
+
+/* ---------- model setup ---------- */
+function loadPreset(key) {
+  activePreset = key;
+  const p = PRESETS[key];
+  if (!p) { // blank
+    const alts = [0,1].map(i => ({id:nid(), name:'Alt ' + (i+1)}));
+    model = {unit:'USD', alts,
+      states:[0,1].map(j => ({id:nid(), name:'State ' + (j+1), p:'', pay:Object.fromEntries(alts.map(a => [a.id,'']))})),
+      rules:[]};
+  } else {
+    const alts = p.alts.map(n => ({id:nid(), name:n}));
+    model = {unit:p.unit, alts,
+      states:p.states.map((n,j) => ({id:nid(), name:n, p:String(p.p[j]), pay:Object.fromEntries(alts.map((a,i) => [a.id, String(p.m[j][i])]))})),
+      rules:p.rules.map(([crit,action,k]) => ({id:nid(), crit, action, k:String(k)}))};
+  }
+  $('unit').value = model.unit;
+  document.querySelectorAll('#presets button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.key === key)));
+  renderTable(); renderRules(); update();
+}
+
+const altName = (a,i) => a.name.trim() || ('Alt ' + (i+1));
+const stateName = (s,j) => s.name.trim() || ('State ' + (j+1));
+
+/* ---------- rendering of inputs ---------- */
+function renderTable() {
+  const head = '<thead><tr><th scope="col">State of nature</th><th scope="col">Probability</th>' +
+    model.alts.map((a,i) => `<th scope="col"><input class="name" value="${esc(a.name)}" data-alt="${a.id}" aria-label="Name of alternative ${i+1}">` +
+      `<br><button class="small danger" type="button" data-del-alt="${a.id}" ${model.alts.length < 2 ? 'disabled' : ''} aria-label="Remove alternative ${esc(altName(a,i))}">Remove</button></th>`).join('') +
+    '</tr></thead>';
+  const body = '<tbody>' + model.states.map((s,j) =>
+    `<tr><th scope="row"><input class="name" value="${esc(s.name)}" data-state="${s.id}" aria-label="Name of state ${j+1}">` +
+    `<br><button class="small danger" type="button" data-del-state="${s.id}" ${model.states.length < 2 ? 'disabled' : ''} aria-label="Remove state ${esc(stateName(s,j))}">Remove</button></th>` +
+    `<td><input type="number" min="0" max="1" step="any" value="${esc(s.p)}" data-prob="${s.id}" aria-label="Probability of ${esc(stateName(s,j))}" aria-describedby="e-${s.id}-p"><span class="cell-err" id="e-${s.id}-p"></span></td>` +
+    model.alts.map((a,i) => `<td><input type="number" step="any" value="${esc(s.pay[a.id])}" data-pay="${a.id}" data-st="${s.id}" aria-label="Payoff of ${esc(altName(a,i))} in ${esc(stateName(s,j))}" aria-describedby="e-${s.id}-${a.id}"><span class="cell-err" id="e-${s.id}-${a.id}"></span></td>`).join('') +
+    '</tr>').join('') + '</tbody>';
+  $('payoffs').innerHTML = head + body;
+}
+
+function renderRules() {
+  $('rules').innerHTML = model.rules.map((r,i) =>
+    `<li><label>Criterion <select data-rule="${r.id}" data-f="crit" aria-label="Stage ${i+1} criterion">` +
+      Object.entries(CRITERIA).map(([k,c]) => `<option value="${k}" ${r.crit === k ? 'selected' : ''}>${c.name}</option>`).join('') +
+    `</select></label>` +
+    `<label>Action <select data-rule="${r.id}" data-f="action" aria-label="Stage ${i+1} action"><option value="keep" ${r.action === 'keep' ? 'selected' : ''}>Keep the best k</option><option value="best" ${r.action === 'best' ? 'selected' : ''}>Select the best one</option></select></label>` +
+    `<label ${r.action === 'best' ? 'hidden' : ''} data-klabel="${r.id}">k <input type="number" min="1" step="1" value="${esc(r.k)}" data-rule="${r.id}" data-f="k" aria-label="Stage ${i+1} value of k" aria-describedby="re-${r.id}"></label>` +
+    `<button class="small" type="button" data-up="${r.id}" ${i === 0 ? 'disabled' : ''} aria-label="Move stage ${i+1} up">↑</button> ` +
+    `<button class="small" type="button" data-down="${r.id}" ${i === model.rules.length-1 ? 'disabled' : ''} aria-label="Move stage ${i+1} down">↓</button> ` +
+    `<button class="small danger" type="button" data-del-rule="${r.id}" aria-label="Remove stage ${i+1}">Remove</button>` +
+    `<div class="cell-err" id="re-${r.id}" style="max-width:none"></div></li>`).join('');
+}
+
+/* ---------- calculations ---------- */
+function compute() {
+  const ps = model.states.map(s => num(s.p));
+  const mat = model.states.map(s => model.alts.map(a => num(s.pay[a.id])));
+  const total = ps.reduce((x,y) => x + y, 0);
+  const probsOk = ps.every(p => Number.isFinite(p) && p >= 0 && p <= 1) && Math.abs(total - 1) <= EPS;
+  const payOk = mat.every(r => r.every(Number.isFinite));
+  if (!payOk) return {ps, mat, total, probsOk, payOk};
+  const best = mat.map(r => Math.max(...r));
+  const stats = model.alts.map((a,i) => {
+    const col = mat.map(r => r[i]);
+    const regrets = col.map((v,j) => best[j] - v);
+    return {id:a.id, name:altName(a,i), idx:i,
+      emv: probsOk ? col.reduce((s,v,j) => s + ps[j]*v, 0) : NaN,
+      max: Math.max(...col), min: Math.min(...col), regret: Math.max(...regrets), regrets};
+  });
+  const finite = stats.every(a => [a.max,a.min,a.regret,...a.regrets,...(probsOk ? [a.emv] : [])].every(Number.isFinite));
+  return {ps, mat, total, probsOk, payOk, best, stats, finite};
+}
+
+function rank(stats, key) {
+  const dir = CRITERIA[key].dir;
+  const sorted = [...stats].sort((a,b) => dir*(b[key]-a[key]) || a.idx-b.idx);
+  const groups = [];
+  sorted.forEach(a => {
+    const g = groups[groups.length-1];
+    if (g && Math.abs(a[key]-g.value) <= EPS) g.items.push(a); else groups.push({value:a[key], items:[a]});
+  });
+  return groups;
+}
+
+function stage(stats, rules) {
+  let left = [...stats];
+  const steps = [{left, gone:[], text:'Start: all alternatives from the original table.', key:null}];
+  for (const r of rules) {
+    const k = r.action === 'best' ? 1 : num(r.k);
+    if (!Number.isSafeInteger(k) || k < 1) return {error:'Every "keep the best k" stage needs a whole number k ≥ 1.'};
+    const c = CRITERIA[r.crit];
+    if (!left.every(a => Number.isFinite(a[r.crit]))) return {error:'EMV needs valid probabilities that add up to 1. Fix them to use EMV in a stage.'};
+    const ord = [...left].sort((a,b) => c.dir*(b[r.crit]-a[r.crit]) || a.idx-b.idx);
+    const cut = ord[Math.min(k, left.length)-1][r.crit];
+    const keep = left.filter(a => c.dir*(a[r.crit]-cut) >= -EPS);
+    const gone = left.filter(a => !keep.includes(a));
+    let t = `${c.name}: ${r.action === 'best' ? 'select the best' : 'keep the best ' + k}. ${c.col}, ${c.dir === 1 ? 'higher' : 'lower'} is better; cutoff ${fmt(cut)}.`;
+    if (keep.length > k) t += ` Tie at the cutoff, so ${keep.length} alternatives survive.`;
+    if (!gone.length) t += ' Nobody is eliminated.';
+    steps.push({left:keep, gone, text:t, key:r.crit});
+    left = keep;
+  }
+  const last = rules[rules.length-1];
+  const label = !last || last.action === 'keep' ? 'Final survivors' : (left.length > 1 ? 'Tied final decision' : 'Final decision');
+  return {steps, left, label, tied: label === 'Tied final decision'};
+}
+
+/* ---------- output ---------- */
+const names = list => list.map(a => esc(a.name)).join(', ');
+const withVals = (list,key) => list.length ? list.map(a => `${esc(a.name)}${key ? ' (' + fmt(a[key]) + ')' : ''}`).join(', ') : 'None';
+function tbl(heads, rows, cap) {
+  return `<div class="scroll" tabindex="0" role="region" aria-label="${esc(cap)}"><table><caption>${esc(cap)}</caption><thead><tr>${heads.map(h => `<th scope="col">${esc(h)}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table></div>`;
+}
+function blockAll(msg) {
+  $('summary').innerHTML = `<div class="banner bad">${msg}</div>`;
+  $('regret').innerHTML = `<p>${msg}</p>`;
+  $('decisions').innerHTML = Object.values(CRITERIA).map(c => `<div class="crit"><h3>${c.name}</h3><p>Unavailable: ${msg}</p></div>`).join('');
+  $('filterMsg').innerHTML = `<div class="banner bad">Staged filtering unavailable: ${msg}</div>`;
+  $('filterOut').innerHTML = ''; $('flow').innerHTML = '';
+}
+
+function update() {
+  const unitTxt = model.unit.trim() || '(unit not set)';
+  document.querySelectorAll('.unitName').forEach(e => e.textContent = unitTxt);
+  const d = compute();
+
+  // field-level validation
+  document.querySelectorAll('[data-pay],[data-prob]').forEach(el => {
+    const isP = el.dataset.prob !== undefined, n = num(el.value);
+    const bad = !Number.isFinite(n) || (isP && (n < 0 || n > 1));
+    el.setAttribute('aria-invalid', String(bad));
+    const out = $(el.getAttribute('aria-describedby'));
+    if (out) out.textContent = bad ? (isP ? 'Enter a probability from 0 to 1.' : 'Enter a number. Blank is not zero.') : '';
+  });
+  model.rules.forEach(r => {
+    const bad = r.action === 'keep' && (!Number.isSafeInteger(num(r.k)) || num(r.k) < 1);
+    $('re-' + r.id).textContent = bad ? 'Enter a whole number k ≥ 1.' : '';
+    const el = document.querySelector(`[data-rule="${r.id}"][data-f="k"]`);
+    if (el) el.setAttribute('aria-invalid', String(bad));
+  });
+
+  // messages
+  const dupAlt = new Set(), seen = {};
+  model.alts.forEach((a,i) => { const n = altName(a,i).toLowerCase(); if (seen[n]) dupAlt.add(altName(a,i)); seen[n] = 1; });
+  let v = `<div class="banner ${d.probsOk ? '' : 'warn'}"><b>Probability total: ${Number.isFinite(d.total) ? +d.total.toFixed(10) : 'incomplete'}.</b> ` +
+    (d.probsOk ? 'Valid probabilities.' : 'Each probability must be between 0 and 1 and the total must be 1 (EMV is unavailable until then). Use “Normalize probabilities” to fix it quickly.') + '</div>';
+  if (!d.payOk) v += '<div class="banner bad">Complete every payoff cell with a number (marked in red) to see the results.</div>';
+  if (dupAlt.size) v += `<div class="banner warn">Repeated alternative name: ${[...dupAlt].map(esc).join(', ')}. Rename them so results are easy to read.</div>`;
+  $('validation').innerHTML = v;
+
+  if (!d.payOk) return blockAll('complete all payoff cells with numbers.');
+  if (!d.finite) return blockAll('the numbers are too large to calculate. Use smaller payoffs.');
+
+  const S = d.stats;
+  const winners = {};
+  ['emv','max','min','regret'].forEach(k => { if (k !== 'emv' || d.probsOk) winners[k] = new Set(rank(S,k)[0].items.map(a => a.id)); });
+
+  $('summary').innerHTML = tbl(['Alternative','EMV','Max payoff','Min payoff','Max regret'],
+    S.map(a => `<tr><th scope="row">${esc(a.name)}</th>` + ['emv','max','min','regret'].map(k => {
+      const w = winners[k] && winners[k].has(a.id);
+      return `<td${w ? ' style="background:var(--brand-l);font-weight:700"' : ''}>${fmt(a[k])}</td>`;
+    }).join('') + '</tr>').join(''), 'Summary statistics (best value in each column is shaded)');
+
+  $('regret').innerHTML = tbl(['State','Best payoff in state',...S.map(a => a.name)],
+    model.states.map((s,j) => `<tr><th scope="row">${esc(stateName(s,j))}</th><td>${fmt(d.best[j])}</td>${S.map(a => `<td>${fmt(a.regrets[j])}</td>`).join('')}</tr>`).join(''),
+    'Regret = best payoff in the state − payoff of the alternative');
+
+  $('decisions').innerHTML = ['max','min','regret','emv'].map(k => {
+    const c = CRITERIA[k];
+    if (k === 'emv' && !d.probsOk) return `<div class="crit"><h3>${c.name}</h3><div class="banner warn">Unavailable: fix the probabilities.</div><p>${c.text}</p></div>`;
+    const g = rank(S,k); let pos = 1;
+    const tie = g[0].items.length > 1;
+    return `<div class="crit"><h3>${c.name}</h3><div class="win ${tie ? 'tie' : ''}">${tie ? 'Tie' : 'Choose'}: ${names(g[0].items)} · ${fmt(g[0].value)}</div><p>${c.text}</p>` +
+      `<b style="font-size:13px">Ranking by ${c.col}</b><ol>` + g.map(x => { const s = pos; pos += x.items.length; return `<li value="${s}">${x.items.length > 1 ? '<span class="tag">tie</span> ' : ''}${x.items.map(a => `${esc(a.name)} (${fmt(a[k])})`).join(' = ')}</li>`; }).join('') + '</ol></div>';
+  }).join('');
+
+  const res = stage(S, model.rules);
+  if (res.error) {
+    $('filterMsg').innerHTML = `<div class="banner bad">${res.error}</div>`;
+    $('filterOut').innerHTML = ''; $('flow').innerHTML = ''; return;
+  }
+  $('filterMsg').innerHTML = model.rules.length ? '' : '<div class="banner">Add at least one stage to explore a decision sequence.</div>';
+  const finalText = `${res.label}: ${names(res.left)}.`;
+  $('filterOut').innerHTML = `<div class="outcome ${res.tied ? 'tied' : ''}">${finalText}</div>` +
+    `<div class="scroll" tabindex="0" role="region" aria-label="Filtering steps"><table><caption>Filtering sequence · values in ${esc(unitTxt)}</caption><thead><tr class="lefthead"><th scope="col">Step</th><th scope="col">What happens</th><th scope="col">Survivors</th><th scope="col">Eliminated</th></tr></thead><tbody>` +
+    res.steps.map((s,i) => `<tr class="${i === res.steps.length-1 ? 'final-row' : ''}"><th scope="row">${i}</th><td style="text-align:left">${esc(s.text)}</td><td style="text-align:left">${withVals(s.left, s.key)}</td><td style="text-align:left">${withVals(s.gone, s.key)}</td></tr>`).join('') + '</tbody></table></div>';
+  $('flow').innerHTML = res.steps.map((s,i) => {
+    const fin = i === res.steps.length-1;
+    return `<li><div class="stage-title"><b>${i === 0 ? 'Start' : 'Stage ' + i}</b>${i ? ' · ' + CRITERIA[s.key].name : ''}</div>` +
+      `<div class="node ${fin ? 'final' : ''} ${fin && res.tied ? 'tied' : ''}"><b>${fin && i > 0 ? esc(res.label) : 'Survivors'}</b><small>${names(s.left)}</small></div>` +
+      (i ? `<div class="gone"><b>Eliminated:</b> ${s.gone.length ? names(s.gone) : 'nobody'}</div>` : '') + '</li>';
+  }).join('');
+}
+
+/* ---------- events ---------- */
+$('payoffs').addEventListener('input', e => {
+  const d = e.target.dataset;
+  if (d.alt) model.alts.find(a => a.id === d.alt).name = e.target.value;
+  if (d.state) model.states.find(s => s.id === d.state).name = e.target.value;
+  if (d.prob) model.states.find(s => s.id === d.prob).p = e.target.value;
+  if (d.pay) model.states.find(s => s.id === d.st).pay[d.pay] = e.target.value;
+  update();
+});
+// after a rename, refresh labels without losing focus while typing
+$('payoffs').addEventListener('change', e => {
+  const d = e.target.dataset;
+  if (d.alt || d.state) { renderTable(); update(); document.querySelector(d.alt ? `[data-alt="${d.alt}"]` : `[data-state="${d.state}"]`)?.focus(); }
+});
+$('payoffs').addEventListener('click', e => {
+  const d = e.target.dataset;
+  if (d.delAlt && model.alts.length > 1) { model.alts = model.alts.filter(a => a.id !== d.delAlt); model.states.forEach(s => delete s.pay[d.delAlt]); renderTable(); update(); document.querySelector('[data-alt]')?.focus(); }
+  if (d.delState && model.states.length > 1) { model.states = model.states.filter(s => s.id !== d.delState); renderTable(); update(); document.querySelector('[data-state]')?.focus(); }
+});
+$('addAlt').addEventListener('click', () => {
+  const a = {id:nid(), name:'Alt ' + (model.alts.length + 1)};
+  model.alts.push(a); model.states.forEach(s => s.pay[a.id] = '');
+  renderTable(); update(); document.querySelector(`[data-alt="${a.id}"]`).focus();
+});
+$('addState').addEventListener('click', () => {
+  const s = {id:nid(), name:'State ' + (model.states.length + 1), p:'', pay:Object.fromEntries(model.alts.map(a => [a.id,'']))};
+  model.states.push(s); renderTable(); update(); document.querySelector(`[data-state="${s.id}"]`).focus();
+});
+$('equalP').addEventListener('click', () => {
+  const n = model.states.length; model.states.forEach(s => s.p = String(+(1/n).toPrecision(12)));
+  // make the total exactly 1 by absorbing rounding in the last state
+  const rest = model.states.slice(0,-1).reduce((t,s) => t + Number(s.p), 0);
+  model.states[n-1].p = String(+(1-rest).toPrecision(12));
+  renderTable(); update();
+});
+$('normP').addEventListener('click', () => {
+  const ps = model.states.map(s => num(s.p));
+  const tot = ps.reduce((a,b) => a+b, 0);
+  if (!ps.every(p => Number.isFinite(p) && p >= 0) || !(tot > 0)) { $('validation').insertAdjacentHTML('beforeend', '<div class="banner bad">Enter a non-negative number for every probability first, with a total above 0.</div>'); return; }
+  let acc = 0;
+  model.states.forEach((s,j) => { if (j < ps.length-1) { const v = +(ps[j]/tot).toPrecision(12); s.p = String(v); acc += v; } });
+  model.states[ps.length-1].p = String(+(1-acc).toPrecision(12));
+  renderTable(); update();
+});
+$('unit').addEventListener('input', e => { model.unit = e.target.value; update(); });
+
+$('rules').addEventListener('input', e => {
+  const d = e.target.dataset; if (!d.rule) return;
+  const r = model.rules.find(x => x.id === d.rule); r[d.f] = e.target.value;
+  if (d.f === 'action') document.querySelector(`[data-klabel="${d.rule}"]`).hidden = e.target.value === 'best';
+  update();
+});
+$('rules').addEventListener('click', e => {
+  const d = e.target.dataset;
+  const i = model.rules.findIndex(r => r.id === (d.up || d.down || d.delRule));
+  if (i < 0) return;
+  if (d.delRule) model.rules.splice(i,1);
+  else { const j = i + (d.up ? -1 : 1); if (j < 0 || j >= model.rules.length) return; [model.rules[i], model.rules[j]] = [model.rules[j], model.rules[i]]; }
+  renderRules(); update(); $('addRule').focus();
+});
+$('addRule').addEventListener('click', () => {
+  model.rules.push({id:nid(), crit:'emv', action:'keep', k:'2'});
+  renderRules(); update(); document.querySelector(`[data-rule="${model.rules[model.rules.length-1].id}"]`).focus();
+});
+
+/* ---------- start-up ---------- */
+$('presets').innerHTML = Object.entries(PRESETS).map(([k,p]) => `<button type="button" class="chip" data-key="${k}" aria-pressed="false">${esc(p.label)}</button>`).join('') +
+  '<button type="button" class="chip" data-key="blank" aria-pressed="false">Blank / custom</button>';
+$('presets').addEventListener('click', e => { const k = e.target.dataset.key; if (k) loadPreset(k); });
+
+if (AI_CONVERSATION_URL) {
+  $('aiBox').innerHTML = `<p style="margin:0 0 8px">This webpage was developed with the help of an AI assistant (Claude). The full conversation is here:</p><p style="margin:0"><a href="${esc(AI_CONVERSATION_URL)}" target="_blank" rel="noopener">${esc(AI_CONVERSATION_URL)}</a></p>`;
+  const top = $('aiLinkTop'); top.href = AI_CONVERSATION_URL; top.target = '_blank'; top.rel = 'noopener'; top.textContent = 'AI development conversation ↗';
+} else {
+  $('aiBox').innerHTML = '<p style="margin:0">The link to the AI conversation has not been added yet.</p>';
+}
+
+loadPreset('cafe');
+})();
+</script>
+</body>
+</html>
